@@ -46,8 +46,7 @@ export default function LoginPage() {
       return
     }
 
-    router.push(ROUTES.dashboard)
-    router.refresh()
+    window.location.href = ROUTES.dashboard
   }
 
   return (
