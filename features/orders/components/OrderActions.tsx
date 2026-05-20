@@ -34,9 +34,9 @@ export function OrderActions({ order }: Props) {
   const statusConfig = ORDER_STATUSES.find((s) => s.value === (order.status as OrderStatus))
 
   async function handlePrintPdf() {
-    const { jsPDF } = await import("jspdf")
+    const { default: JsPDF } = await import("jspdf")
 
-    const doc = new jsPDF({ unit: "mm", format: "a4" })
+    const doc = new JsPDF({ unit: "mm", format: "a4" })
     const W = doc.internal.pageSize.getWidth()
     const margin = 20
 
