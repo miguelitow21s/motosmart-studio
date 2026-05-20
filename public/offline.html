@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sin conexión — MotoSmart Studio</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: #0a0a0b;
+      color: #a1a1aa;
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .card {
+      background: #111113;
+      border: 1px solid rgba(63,63,70,0.6);
+      border-radius: 1rem;
+      padding: 2.5rem;
+      max-width: 380px;
+      width: 100%;
+      text-align: center;
+    }
+    .icon {
+      width: 56px; height: 56px;
+      background: rgba(99,102,241,0.15);
+      border-radius: 1rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.25rem;
+      font-size: 1.5rem;
+    }
+    h1 { color: #f4f4f5; font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem; }
+    p  { font-size: 0.875rem; line-height: 1.5; margin-bottom: 1.5rem; }
+    button {
+      background: #6366f1;
+      color: white;
+      border: none;
+      border-radius: 0.5rem;
+      padding: 0.5rem 1.25rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    button:hover { background: #4f46e5; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">📡</div>
+    <h1>Sin conexión</h1>
+    <p>No hay conexión a internet. Las páginas que visitaste recientemente pueden estar disponibles en caché.</p>
+    <button onclick="location.reload()">Intentar de nuevo</button>
+  </div>
+</body>
+</html>
