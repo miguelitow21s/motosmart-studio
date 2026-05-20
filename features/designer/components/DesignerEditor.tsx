@@ -70,14 +70,19 @@ export function DesignerEditor({ orderId, createdBy, existingDesign }: Props) {
       const { objects } = await loadSVGFromString(svgContent)
       const valid = objects.filter((obj) => {
         if (!obj) return false
-        // Drop the white background rect Fabric.js adds when exporting SVGs
-        const o = obj as { type?: string; fill?: string; left?: number; top?: number; width?: number; height?: number }
-        if (
-          o.type === "rect" &&
-          (o.fill === "white" || o.fill === "#ffffff" || o.fill === "rgb(255,255,255)") &&
-          (o.left === 0 || o.left == null) &&
-          (o.top === 0 || o.top == null)
-        ) return false
+        const o = obj as { type?: string; fill?: string | null; left?: number; top?: number }
+        if (o.type === "rect") {
+          const fill = (o.fill ?? "").toString().toLowerCase().replace(/\s/g, "")
+          const isWhite =
+            fill === "white" ||
+            fill === "#ffffff" ||
+            fill === "#fff" ||
+            fill === "rgb(255,255,255)" ||
+            fill === "rgba(255,255,255,1)" ||
+            fill === "rgba(255,255,255,1.0)"
+          const isAtOrigin = (o.left ?? 0) <= 2 && (o.top ?? 0) <= 2
+          if (isWhite && isAtOrigin) return false
+        }
         return true
       }) as FabricObject[]
       if (!valid.length) {
