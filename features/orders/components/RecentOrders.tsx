@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
+import { toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { StatusBadge } from "@/components/shared/StatusBadge"
@@ -18,7 +19,7 @@ export function RecentOrders() {
   useEffect(() => {
     getOrders({ pageSize: 6 })
       .then(({ data }) => setOrders(data))
-      .catch(console.error)
+      .catch(() => toast.error("Error al cargar pedidos recientes"))
       .finally(() => setLoading(false))
   }, [])
 

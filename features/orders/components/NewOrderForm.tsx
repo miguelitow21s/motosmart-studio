@@ -92,7 +92,7 @@ export function NewOrderForm() {
     Promise.all([getClients(), getMotorcycles()]).then(([c, m]) => {
       setClients(c)
       setMotorcycles(m as MotorcycleOption[])
-    }).catch(console.error)
+    }).catch(() => toast.error("Error al cargar clientes y motos"))
   }, [])
 
   const selectedClient = clients.find((c) => c.id === watchedClientId)

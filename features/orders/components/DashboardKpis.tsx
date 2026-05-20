@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
+import { toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ClipboardList, Truck, DollarSign, AlertTriangle, TrendingUp } from "lucide-react"
@@ -64,7 +65,7 @@ export function DashboardKpis() {
   useEffect(() => {
     getDashboardStats()
       .then(setStats)
-      .catch(console.error)
+      .catch(() => toast.error("Error al cargar estadísticas del dashboard"))
       .finally(() => setLoading(false))
   }, [])
 

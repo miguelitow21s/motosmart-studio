@@ -7,6 +7,7 @@ import {
   Search, SlidersHorizontal, ChevronLeft, ChevronRight,
   Eye, Calendar, Phone, Bike
 } from "lucide-react"
+import { toast } from "sonner"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -42,8 +43,8 @@ export function OrdersTable() {
       })
       setOrders(data)
       setTotal(count)
-    } catch (e) {
-      console.error(e)
+    } catch {
+      toast.error("Error al cargar los pedidos")
     } finally {
       setLoading(false)
     }

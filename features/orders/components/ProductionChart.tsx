@@ -5,6 +5,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Legend,
 } from "recharts"
+import { toast } from "sonner"
 import { Skeleton } from "@/components/ui/skeleton"
 import { formatCurrency } from "@/lib/utils/formatters"
 import { getWeeklyChartData, type DayStats } from "../services/ordersService"
@@ -39,7 +40,7 @@ export function ProductionChart() {
   useEffect(() => {
     getWeeklyChartData()
       .then(setData)
-      .catch(console.error)
+      .catch(() => toast.error("Error al cargar datos del gráfico"))
       .finally(() => setLoading(false))
   }, [])
 
