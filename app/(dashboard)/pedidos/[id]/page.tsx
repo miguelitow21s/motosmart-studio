@@ -5,6 +5,7 @@ import { createClient as createServerClient } from "@/lib/supabase/server"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { OrderDetail } from "@/features/orders/components/OrderDetail"
 import { OrderActions } from "@/features/orders/components/OrderActions"
+import { OrderFiles } from "@/features/orders/components/OrderFiles"
 import { Button } from "@/components/ui/button"
 import { ROUTES } from "@/lib/constants/routes"
 
@@ -54,7 +55,10 @@ export default async function OrderDetailPage({ params }: Props) {
           </Link>
         </div>
       </PageHeader>
-      <OrderDetail order={order as never} history={history ?? []} />
+      <div className="space-y-4">
+        <OrderDetail order={order as never} history={history ?? []} />
+        <OrderFiles orderId={id} />
+      </div>
     </div>
   )
 }

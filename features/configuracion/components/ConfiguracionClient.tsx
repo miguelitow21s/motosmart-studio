@@ -5,7 +5,7 @@ import { useForm, type Resolver } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import {
-  User, Building2, Bell, Shield, Loader2, Check, ChevronRight,
+  User, Building2, Bell, Shield, Loader2, Check, ChevronRight, BookOpen,
 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -16,8 +16,9 @@ import { PageHeader } from "@/components/layout/PageHeader"
 import { useAuthStore } from "@/stores/authStore"
 import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
+import { CatalogosPanel } from "./CatalogosPanel"
 
-type Tab = "perfil" | "taller" | "notificaciones" | "seguridad"
+type Tab = "perfil" | "taller" | "catalogos" | "notificaciones" | "seguridad"
 
 const profileSchema = z.object({
   full_name: z.string().min(2, "Mínimo 2 caracteres"),
@@ -48,6 +49,7 @@ type PasswordData = z.infer<typeof passwordSchema>
 const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
   { id: "perfil", label: "Perfil", icon: User },
   { id: "taller", label: "Taller", icon: Building2 },
+  { id: "catalogos", label: "Catálogos", icon: BookOpen },
   { id: "notificaciones", label: "Notificaciones", icon: Bell },
   { id: "seguridad", label: "Seguridad", icon: Shield },
 ]
@@ -89,6 +91,7 @@ export function ConfiguracionClient() {
         <div className="flex-1 min-w-0">
           {activeTab === "perfil" && <PerfilPanel />}
           {activeTab === "taller" && <TallerPanel />}
+          {activeTab === "catalogos" && <CatalogosPanel />}
           {activeTab === "notificaciones" && <NotificacionesPanel />}
           {activeTab === "seguridad" && <SeguridadPanel />}
         </div>

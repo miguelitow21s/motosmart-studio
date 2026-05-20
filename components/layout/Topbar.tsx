@@ -1,6 +1,6 @@
 "use client"
 
-import { Bell, Search, Plus } from "lucide-react"
+import { Search, Plus } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -16,6 +16,7 @@ import { useAuthStore } from "@/stores/authStore"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { ROUTES } from "@/lib/constants/routes"
+import { NotificationBell } from "./NotificationBell"
 
 export function Topbar() {
   const { user } = useAuthStore()
@@ -57,10 +58,7 @@ export function Topbar() {
         </Button>
 
         {/* Notifications */}
-        <button className="relative flex items-center justify-center w-9 h-9 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 transition-colors">
-          <Bell className="w-4 h-4" />
-          <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-indigo-400" />
-        </button>
+        <NotificationBell />
 
         {/* User menu */}
         <DropdownMenu>
