@@ -16,7 +16,7 @@ import { StatusBadge } from "@/components/shared/StatusBadge"
 import { cn } from "@/lib/utils"
 import { ORDER_STATUSES, WORK_TYPES } from "@/lib/constants/order-statuses"
 import { formatCurrency, formatDate, formatDatetime, formatRelativeTime } from "@/lib/utils/formatters"
-import { updateOrderStatus } from "../services/ordersService"
+import { updateOrderStatusAction } from "@/app/(dashboard)/pedidos/actions"
 import { useAuthStore } from "@/stores/authStore"
 import type { OrderStatus } from "@/types"
 import type { Database } from "@/types/database.types"
@@ -50,7 +50,8 @@ export function OrderDetail({ order, history }: Props) {
     if (newStatus === currentStatus) return
     setUpdating(true)
     try {
-      await updateOrderStatus(order.id, newStatus as OrderStatus, user?.id ?? "")
+      const result = await updateOrderStatusAction(order.id, newStatus, user?.id ?? "")
+      if (result.error) throw new Error(result.error)
       setCurrentStatus(newStatus as OrderStatus)
       toast.success("Estado actualizado")
       router.refresh()

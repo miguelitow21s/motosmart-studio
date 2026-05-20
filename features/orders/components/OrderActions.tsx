@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { QRCodeSVG } from "qrcode.react"
 import { Download, QrCode, Printer, X, Copy, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -26,6 +26,11 @@ interface Props {
 export function OrderActions({ order }: Props) {
   const [qrOpen, setQrOpen] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [publicUrl, setPublicUrl] = useState("")
+
+  useEffect(() => {
+    setPublicUrl(`${window.location.origin}${ROUTES.publicOrder(order.serial)}`)
+  }, [order.serial])
 
   async function handleCopyLink() {
     try {
@@ -36,10 +41,6 @@ export function OrderActions({ order }: Props) {
       /* fallback for browsers that block clipboard */
     }
   }
-
-  const publicUrl = typeof window !== "undefined"
-    ? `${window.location.origin}${ROUTES.publicOrder(order.serial)}`
-    : ""
 
   const workLabel = WORK_TYPES.find((t) => t.value === order.work_type)?.label ?? order.work_type
   const statusConfig = ORDER_STATUSES.find((s) => s.value === (order.status as OrderStatus))

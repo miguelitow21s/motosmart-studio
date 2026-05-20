@@ -68,7 +68,18 @@ export function DesignerEditor({ orderId, createdBy, existingDesign }: Props) {
     try {
       const { loadSVGFromString, Group } = await import("fabric")
       const { objects } = await loadSVGFromString(svgContent)
-      const valid = objects.filter(Boolean) as FabricObject[]
+      const valid = objects.filter((obj) => {
+        if (!obj) return false
+        // Drop the white background rect Fabric.js adds when exporting SVGs
+        const o = obj as { type?: string; fill?: string; left?: number; top?: number; width?: number; height?: number }
+        if (
+          o.type === "rect" &&
+          (o.fill === "white" || o.fill === "#ffffff" || o.fill === "rgb(255,255,255)") &&
+          (o.left === 0 || o.left == null) &&
+          (o.top === 0 || o.top == null)
+        ) return false
+        return true
+      }) as FabricObject[]
       if (!valid.length) {
         toast.error("SVG inválido o vacío")
         return
