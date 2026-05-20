@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -25,6 +25,12 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) window.location.href = ROUTES.dashboard
+    })
+  }, [])
 
   const {
     register,

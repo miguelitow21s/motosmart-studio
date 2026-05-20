@@ -65,13 +65,15 @@ self.addEventListener("fetch", (event) => {
     return
   }
 
-  // Navigation → stale-while-revalidate, fallback a offline.html
+  // Navigation → network-first, solo cachea respuestas 200
   if (request.mode === "navigate") {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const clone = response.clone()
-          caches.open(DYNAMIC_CACHE).then((c) => c.put(request, clone))
+          if (response.ok) {
+            const clone = response.clone()
+            caches.open(DYNAMIC_CACHE).then((c) => c.put(request, clone))
+          }
           return response
         })
         .catch(() =>
