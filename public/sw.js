@@ -1,9 +1,8 @@
-const CACHE_VERSION = "v1"
+const CACHE_VERSION = "v2"
 const STATIC_CACHE = `motosmart-static-${CACHE_VERSION}`
 const DYNAMIC_CACHE = `motosmart-dynamic-${CACHE_VERSION}`
 
 const STATIC_ASSETS = [
-  "/",
   "/login",
   "/manifest.json",
   "/offline.html",
@@ -14,7 +13,7 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(STATIC_CACHE).then((cache) =>
       cache.addAll(STATIC_ASSETS.map((url) => new Request(url, { cache: "reload" })))
-        .catch(() => {}) // tolerate failures en dev
+        .catch(() => {})
     ).then(() => self.skipWaiting())
   )
 })
@@ -37,13 +36,14 @@ self.addEventListener("fetch", (event) => {
   const { request } = event
   const url = new URL(request.url)
 
-  // Skip: non-GET, cross-origin, Supabase API, hot reload
+  // Skip: non-GET, cross-origin, Supabase API, hot reload, realtime
   if (
     request.method !== "GET" ||
     url.origin !== self.location.origin ||
     url.pathname.startsWith("/api/") ||
     url.pathname.startsWith("/_next/webpack-hmr") ||
-    url.hostname.includes("supabase.co")
+    url.hostname.includes("supabase.co") ||
+    url.pathname.includes("/realtime/")
   ) {
     return
   }
@@ -78,7 +78,7 @@ self.addEventListener("fetch", (event) => {
         })
         .catch(() =>
           caches.match(request).then(
-            (cached) => cached ?? caches.match("/offline.html")
+            (cached) => cached ?? caches.match("/offline.html") ?? Response.error()
           )
         )
     )
@@ -95,6 +95,6 @@ self.addEventListener("fetch", (event) => {
         }
         return response
       })
-      .catch(() => caches.match(request))
+      .catch(() => caches.match(request).then((r) => r ?? Response.error()))
   )
 })

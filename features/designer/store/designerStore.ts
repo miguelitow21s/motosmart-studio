@@ -2,7 +2,7 @@
 
 import { create } from "zustand"
 
-export type DesignerTool = "select" | "draw" | "text" | "eraser"
+export type DesignerTool = "select" | "draw" | "line" | "rect" | "ellipse" | "text" | "eraser"
 
 interface DesignerState {
   tool: DesignerTool

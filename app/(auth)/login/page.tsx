@@ -1,7 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -10,9 +9,8 @@ import { Wrench, Loader2, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { createClient } from "@/lib/supabase/client"
-import { ROUTES } from "@/lib/constants/routes"
 import { cn } from "@/lib/utils"
+import { loginAction } from "./actions"
 
 const loginSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -23,14 +21,6 @@ type LoginForm = z.infer<typeof loginSchema>
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
-  const supabase = createClient()
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) window.location.href = ROUTES.dashboard
-    })
-  }, [])
 
   const {
     register,
@@ -42,17 +32,10 @@ export default function LoginPage() {
 
   async function onSubmit(data: LoginForm) {
     setError(null)
-    const { error } = await supabase.auth.signInWithPassword({
-      email: data.email,
-      password: data.password,
-    })
-
-    if (error) {
-      setError("Credenciales incorrectas. Verifica tu email y contraseña.")
-      return
+    const result = await loginAction(data.email, data.password)
+    if (result?.error) {
+      setError(result.error)
     }
-
-    window.location.href = ROUTES.dashboard
   }
 
   return (

@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { QRCodeSVG } from "qrcode.react"
-import { Download, QrCode, Printer, X } from "lucide-react"
+import { Download, QrCode, Printer, X, Copy, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -25,6 +25,17 @@ interface Props {
 
 export function OrderActions({ order }: Props) {
   const [qrOpen, setQrOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  async function handleCopyLink() {
+    try {
+      await navigator.clipboard.writeText(publicUrl)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      /* fallback for browsers that block clipboard */
+    }
+  }
 
   const publicUrl = typeof window !== "undefined"
     ? `${window.location.origin}${ROUTES.publicOrder(order.serial)}`
@@ -196,35 +207,50 @@ export function OrderActions({ order }: Props) {
             <p className="text-xs text-zinc-500 text-center">
               Comparte este código con el cliente para que pueda seguir el estado de su pedido en tiempo real
             </p>
-            <div className="flex gap-2 w-full">
+            <div className="flex flex-col gap-2 w-full">
               <Button
                 size="sm"
-                className="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white gap-1.5"
-                onClick={() => {
-                  const svg = document.querySelector(".qr-export svg") as SVGElement | null
-                  if (!svg) return
-                  const blob = new Blob([svg.outerHTML], { type: "image/svg+xml" })
-                  const url = URL.createObjectURL(blob)
-                  const a = document.createElement("a")
-                  a.href = url
-                  a.download = `qr-${order.serial}.svg`
-                  a.click()
-                  URL.revokeObjectURL(url)
-                }}
+                onClick={handleCopyLink}
+                className={`w-full gap-1.5 transition-colors ${
+                  copied
+                    ? "bg-emerald-500 hover:bg-emerald-600 text-white"
+                    : "bg-indigo-500 hover:bg-indigo-600 text-white"
+                }`}
               >
-                <Download className="w-3.5 h-3.5" />
-                Descargar SVG
+                {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                {copied ? "¡Enlace copiado!" : "Copiar enlace"}
               </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setQrOpen(false)}
-                className="border-zinc-800 text-zinc-400"
-              >
-                <X className="w-3.5 h-3.5" />
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1 border-zinc-700 text-zinc-300 hover:bg-zinc-800 gap-1.5"
+                  onClick={() => {
+                    const svg = document.querySelector("[data-qr-export] svg") as SVGElement | null
+                    if (!svg) return
+                    const blob = new Blob([svg.outerHTML], { type: "image/svg+xml" })
+                    const url = URL.createObjectURL(blob)
+                    const a = document.createElement("a")
+                    a.href = url
+                    a.download = `qr-${order.serial}.svg`
+                    a.click()
+                    URL.revokeObjectURL(url)
+                  }}
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  Descargar QR
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setQrOpen(false)}
+                  className="border-zinc-700 text-zinc-500 hover:bg-zinc-800"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </Button>
+              </div>
             </div>
-            <div className="qr-export hidden">
+            <div data-qr-export className="hidden">
               <QRCodeSVG value={publicUrl} size={400} level="M" />
             </div>
           </div>

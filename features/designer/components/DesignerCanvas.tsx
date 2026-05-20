@@ -4,6 +4,13 @@ import { useEffect, useRef, useCallback } from "react"
 import type { Canvas as FabricCanvas, FabricObject } from "fabric"
 import { useDesignerStore } from "../store/designerStore"
 
+// Shape drawing state (module-level to avoid closure issues)
+let _isDown = false
+let _startX = 0
+let _startY = 0
+let _activeShape: FabricObject | null = null
+const _handlers: { down?: (e: unknown) => void; move?: (e: unknown) => void; up?: (e: unknown) => void } = {}
+
 interface Props {
   initialJson?: object | null
   onCanvasReady: (canvas: FabricCanvas) => void
@@ -156,18 +163,124 @@ export function DesignerCanvas({ initialJson, onCanvasReady }: Props) {
     const canvas = fabricRef.current
     if (!canvas) return
 
-    getFabric().then(({ PencilBrush }) => {
+    // Remove previous shape handlers
+    if (_handlers.down) canvas.off("mouse:down", _handlers.down as never)
+    if (_handlers.move) canvas.off("mouse:move", _handlers.move as never)
+    if (_handlers.up)   canvas.off("mouse:up",   _handlers.up   as never)
+    _handlers.down = _handlers.move = _handlers.up = undefined
+    _isDown = false
+    _activeShape = null
+
+    getFabric().then(({ PencilBrush, Rect, Ellipse, Line }) => {
+      const c = fabricRef.current
+      if (!c) return
+
       if (tool === "draw") {
-        canvas.isDrawingMode = true
-        canvas.freeDrawingBrush = new PencilBrush(canvas)
-        canvas.freeDrawingBrush.color = strokeColor
-        canvas.freeDrawingBrush.width = strokeWidth
-      } else {
-        canvas.isDrawingMode = false
+        c.isDrawingMode = true
+        c.selection = false
+        c.freeDrawingBrush = new PencilBrush(c)
+        c.freeDrawingBrush.color = strokeColor
+        c.freeDrawingBrush.width = strokeWidth
+        return
       }
-      canvas.selection = tool === "select"
+
+      c.isDrawingMode = false
+
+      if (tool === "select") {
+        c.selection = true
+        return
+      }
+
+      if (tool === "eraser") {
+        c.selection = true
+        const down = (e: { target?: unknown }) => {
+          if (e.target) {
+            c.remove(e.target as Parameters<typeof c.remove>[0])
+            c.renderAll()
+          }
+        }
+        c.on("mouse:down", down as never)
+        _handlers.down = down as (e: unknown) => void
+        return
+      }
+
+      c.selection = false
+
+      if (tool === "line") {
+        const down = (e: { scenePoint: { x: number; y: number } }) => {
+          _isDown = true; _startX = e.scenePoint.x; _startY = e.scenePoint.y
+          const obj = new Line([_startX, _startY, _startX, _startY], {
+            stroke: strokeColor, strokeWidth, selectable: false, evented: false,
+          })
+          c.add(obj); _activeShape = obj as unknown as FabricObject
+        }
+        const move = (e: { scenePoint: { x: number; y: number } }) => {
+          if (!_isDown || !_activeShape) return
+          ;(_activeShape as unknown as { set: (p: object) => void }).set({ x2: e.scenePoint.x, y2: e.scenePoint.y })
+          c.renderAll()
+        }
+        const up = () => {
+          _isDown = false
+          if (_activeShape) { ;(_activeShape as unknown as { set: (p: object) => void }).set({ selectable: true, evented: true }); c.renderAll() }
+          _activeShape = null
+        }
+        c.on("mouse:down", down as never); c.on("mouse:move", move as never); c.on("mouse:up", up as never)
+        _handlers.down = down as (e: unknown) => void; _handlers.move = move as (e: unknown) => void; _handlers.up = up
+        return
+      }
+
+      if (tool === "rect") {
+        const down = (e: { scenePoint: { x: number; y: number } }) => {
+          _isDown = true; _startX = e.scenePoint.x; _startY = e.scenePoint.y
+          const obj = new Rect({ left: _startX, top: _startY, width: 0, height: 0,
+            stroke: strokeColor, strokeWidth, fill: fillColor === "transparent" ? "transparent" : fillColor,
+            selectable: false, evented: false })
+          c.add(obj); _activeShape = obj as unknown as FabricObject
+        }
+        const move = (e: { scenePoint: { x: number; y: number } }) => {
+          if (!_isDown || !_activeShape) return
+          const { x, y } = e.scenePoint
+          ;(_activeShape as unknown as { set: (p: object) => void }).set({
+            left: Math.min(x, _startX), top: Math.min(y, _startY),
+            width: Math.abs(x - _startX), height: Math.abs(y - _startY),
+          }); c.renderAll()
+        }
+        const up = () => {
+          _isDown = false
+          if (_activeShape) { ;(_activeShape as unknown as { set: (p: object) => void }).set({ selectable: true, evented: true }); c.renderAll() }
+          _activeShape = null
+        }
+        c.on("mouse:down", down as never); c.on("mouse:move", move as never); c.on("mouse:up", up as never)
+        _handlers.down = down as (e: unknown) => void; _handlers.move = move as (e: unknown) => void; _handlers.up = up
+        return
+      }
+
+      if (tool === "ellipse") {
+        const down = (e: { scenePoint: { x: number; y: number } }) => {
+          _isDown = true; _startX = e.scenePoint.x; _startY = e.scenePoint.y
+          const obj = new Ellipse({ left: _startX, top: _startY, rx: 0, ry: 0,
+            stroke: strokeColor, strokeWidth, fill: fillColor === "transparent" ? "transparent" : fillColor,
+            selectable: false, evented: false })
+          c.add(obj); _activeShape = obj as unknown as FabricObject
+        }
+        const move = (e: { scenePoint: { x: number; y: number } }) => {
+          if (!_isDown || !_activeShape) return
+          const { x, y } = e.scenePoint
+          ;(_activeShape as unknown as { set: (p: object) => void }).set({
+            left: Math.min(x, _startX), top: Math.min(y, _startY),
+            rx: Math.abs(x - _startX) / 2, ry: Math.abs(y - _startY) / 2,
+          }); c.renderAll()
+        }
+        const up = () => {
+          _isDown = false
+          if (_activeShape) { ;(_activeShape as unknown as { set: (p: object) => void }).set({ selectable: true, evented: true }); c.renderAll() }
+          _activeShape = null
+        }
+        c.on("mouse:down", down as never); c.on("mouse:move", move as never); c.on("mouse:up", up as never)
+        _handlers.down = down as (e: unknown) => void; _handlers.move = move as (e: unknown) => void; _handlers.up = up
+      }
     })
-  }, [tool, strokeColor, strokeWidth])
+  }, [tool, strokeColor, strokeWidth, fillColor])
 
   // Delete selected on Backspace / Delete
   useEffect(() => {
