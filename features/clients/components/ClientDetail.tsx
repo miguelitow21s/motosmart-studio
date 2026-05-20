@@ -188,7 +188,7 @@ export function ClientDetail({ client, orders }: Props) {
                       </td>
                       <td className="px-4 py-3 hidden lg:table-cell">
                         <p className="text-xs text-zinc-600">{formatDate(order.created_at)}</p>
-                        <p className="text-xs text-zinc-700">{formatRelativeTime(order.created_at)}</p>
+                        <p className="text-xs text-zinc-700" suppressHydrationWarning>{formatRelativeTime(order.created_at)}</p>
                       </td>
                       <td className="px-4 py-3">
                         <Link

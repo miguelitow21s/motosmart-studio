@@ -181,7 +181,7 @@ export function OrderFiles({ orderId }: Props) {
               <FileIcon name={f.name} />
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium text-zinc-200 truncate">{f.name}</p>
-                <p className="text-[10px] text-zinc-600">
+                <p className="text-[10px] text-zinc-600" suppressHydrationWarning>
                   {FILE_TYPES.find((t) => t.value === f.type)?.label} · {humanSize(f.size)} · {formatRelativeTime(f.created_at)}
                 </p>
               </div>

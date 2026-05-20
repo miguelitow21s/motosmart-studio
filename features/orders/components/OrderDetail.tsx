@@ -270,7 +270,7 @@ function InfoRow({
       <div>
         <p className="text-xs text-zinc-600">{label}</p>
         <p className={cn("text-sm text-zinc-300 font-medium", valueClass)}>{value}</p>
-        {sub && <p className="text-xs text-zinc-600 mt-0.5">{sub}</p>}
+        {sub && <p className="text-xs text-zinc-600 mt-0.5" suppressHydrationWarning>{sub}</p>}
       </div>
     </div>
   )

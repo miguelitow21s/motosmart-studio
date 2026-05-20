@@ -155,7 +155,7 @@ export function ClientsTable() {
                       </span>
                     </td>
                     <td className="px-4 py-3 hidden xl:table-cell">
-                      <span className="text-zinc-600 text-xs">
+                      <span className="text-zinc-600 text-xs" suppressHydrationWarning>
                         {client.last_order_date
                           ? formatRelativeTime(client.last_order_date)
                           : "—"}
