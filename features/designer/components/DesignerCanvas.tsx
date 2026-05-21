@@ -35,7 +35,7 @@ export function DesignerCanvas({ initialJson, onCanvasReady }: Props) {
   const historyPosRef = useRef(-1)
   const isRestoringRef = useRef(false)
 
-  const { tool, strokeColor, strokeWidth, fillColor, fontSize, setCanUndo, setCanRedo, setDirty } =
+  const { tool, strokeColor, strokeWidth, fillColor, fontSize, setCanUndo, setCanRedo, setDirty, setHasSelection } =
     useDesignerStore()
 
   const pushHistory = useCallback((json: string) => {
@@ -51,10 +51,19 @@ export function DesignerCanvas({ initialJson, onCanvasReady }: Props) {
     setDirty(true)
   }, [setCanUndo, setCanRedo, setDirty])
 
-  // Expose undo/redo to parent via store actions on canvas
+  // Expose canvas actions to parent via window for toolbar buttons
   useEffect(() => {
     const canvas = fabricRef.current
     if (!canvas) return
+
+    type W = Window & {
+      __designerUndo?: () => void
+      __designerRedo?: () => void
+      __designerDuplicate?: () => void
+      __designerBringToFront?: () => void
+      __designerSendToBack?: () => void
+      __designerSetOpacity?: (opacity: number) => void
+    }
 
     const handleUndo = () => {
       const pos = historyPosRef.current
@@ -85,9 +94,48 @@ export function DesignerCanvas({ initialJson, onCanvasReady }: Props) {
       })
     }
 
-    // Expose on window for toolbar buttons
-    ;(window as Window & { __designerUndo?: () => void; __designerRedo?: () => void }).__designerUndo = handleUndo
-    ;(window as Window & { __designerUndo?: () => void; __designerRedo?: () => void }).__designerRedo = handleRedo
+    const handleDuplicate = async () => {
+      const active = canvas.getActiveObjects()
+      if (!active.length) return
+      canvas.discardActiveObject()
+      const clones: FabricObject[] = []
+      for (const obj of active) {
+        const cloned = await (obj as unknown as { clone: () => Promise<FabricObject> }).clone()
+        cloned.set({ left: (cloned.left ?? 0) + 20, top: (cloned.top ?? 0) + 20 })
+        canvas.add(cloned)
+        clones.push(cloned)
+      }
+      if (clones.length === 1) {
+        canvas.setActiveObject(clones[0])
+      } else {
+        const { ActiveSelection } = await getFabric()
+        const sel = new ActiveSelection(clones, { canvas })
+        canvas.setActiveObject(sel as unknown as FabricObject)
+      }
+      canvas.renderAll()
+    }
+
+    const handleBringToFront = () => {
+      canvas.getActiveObjects().forEach((obj) => canvas.bringObjectToFront(obj))
+      canvas.renderAll()
+    }
+
+    const handleSendToBack = () => {
+      canvas.getActiveObjects().forEach((obj) => canvas.sendObjectToBack(obj))
+      canvas.renderAll()
+    }
+
+    const handleSetOpacity = (opacity: number) => {
+      canvas.getActiveObjects().forEach((obj) => obj.set({ opacity }))
+      canvas.renderAll()
+    }
+
+    ;(window as W).__designerUndo = handleUndo
+    ;(window as W).__designerRedo = handleRedo
+    ;(window as W).__designerDuplicate = handleDuplicate
+    ;(window as W).__designerBringToFront = handleBringToFront
+    ;(window as W).__designerSendToBack = handleSendToBack
+    ;(window as W).__designerSetOpacity = handleSetOpacity
   })
 
   // Init canvas
@@ -135,6 +183,9 @@ export function DesignerCanvas({ initialJson, onCanvasReady }: Props) {
         if (isRestoringRef.current) return
         pushHistory(JSON.stringify(canvas.toJSON()))
       })
+      canvas.on("selection:created", () => setHasSelection(true))
+      canvas.on("selection:updated", () => setHasSelection(true))
+      canvas.on("selection:cleared", () => setHasSelection(false))
 
       fabricRef.current = canvas
       onCanvasReady(canvas)
@@ -305,6 +356,10 @@ export function DesignerCanvas({ initialJson, onCanvasReady }: Props) {
       if ((e.ctrlKey || e.metaKey) && (e.key === "y" || (e.shiftKey && e.key === "z"))) {
         e.preventDefault()
         ;(window as Window & { __designerRedo?: () => void }).__designerRedo?.()
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "d") {
+        e.preventDefault()
+        ;(window as Window & { __designerDuplicate?: () => void }).__designerDuplicate?.()
       }
     }
     window.addEventListener("keydown", handleKeyDown)

@@ -14,6 +14,7 @@ interface DesignerState {
   canRedo: boolean
   isDirty: boolean
   isSaving: boolean
+  hasSelection: boolean
 
   setTool: (tool: DesignerTool) => void
   setStrokeColor: (color: string) => void
@@ -24,6 +25,7 @@ interface DesignerState {
   setCanRedo: (v: boolean) => void
   setDirty: (v: boolean) => void
   setSaving: (v: boolean) => void
+  setHasSelection: (v: boolean) => void
 }
 
 export const useDesignerStore = create<DesignerState>((set) => ({
@@ -36,6 +38,7 @@ export const useDesignerStore = create<DesignerState>((set) => ({
   canRedo: false,
   isDirty: false,
   isSaving: false,
+  hasSelection: false,
 
   setTool: (tool) => set({ tool }),
   setStrokeColor: (strokeColor) => set({ strokeColor }),
@@ -46,4 +49,5 @@ export const useDesignerStore = create<DesignerState>((set) => ({
   setCanRedo: (canRedo) => set({ canRedo }),
   setDirty: (isDirty) => set({ isDirty }),
   setSaving: (isSaving) => set({ isSaving }),
+  setHasSelection: (hasSelection) => set({ hasSelection }),
 }))

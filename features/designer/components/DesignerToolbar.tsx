@@ -3,6 +3,7 @@
 import {
   MousePointer2, Pencil, Type, Trash2, Undo2, Redo2, Download, Save,
   Loader2, LayoutTemplate, Minus, Square, Circle, Eraser,
+  ImagePlus, Copy, ArrowUpToLine, ArrowDownToLine,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -17,6 +18,11 @@ interface Props {
   onExportPng: () => void
   onDeleteSelected: () => void
   onOpenTemplatePicker: () => void
+  onDuplicate: () => void
+  onBringToFront: () => void
+  onSendToBack: () => void
+  onSetOpacity: (opacity: number) => void
+  onImageUpload: (file: File) => void
 }
 
 const TOOLS: { id: DesignerTool; icon: React.ElementType; label: string; shortcut: string }[] = [
@@ -31,7 +37,10 @@ const TOOLS: { id: DesignerTool; icon: React.ElementType; label: string; shortcu
 
 const STROKE_WIDTHS = [2, 4, 6, 10]
 
-export function DesignerToolbar({ onSave, onExportPng, onDeleteSelected, onOpenTemplatePicker }: Props) {
+export function DesignerToolbar({
+  onSave, onExportPng, onDeleteSelected, onOpenTemplatePicker,
+  onDuplicate, onBringToFront, onSendToBack, onSetOpacity, onImageUpload,
+}: Props) {
   const {
     tool, setTool,
     strokeColor, setStrokeColor,
@@ -39,6 +48,7 @@ export function DesignerToolbar({ onSave, onExportPng, onDeleteSelected, onOpenT
     strokeWidth, setStrokeWidth,
     canUndo, canRedo,
     isDirty, isSaving,
+    hasSelection,
   } = useDesignerStore()
 
   function handleUndo() {
@@ -175,6 +185,95 @@ export function DesignerToolbar({ onSave, onExportPng, onDeleteSelected, onOpenT
                 style={{ width: Math.max(2, w - 1), height: Math.max(2, w - 1) }}
               />
             </button>
+          ))}
+        </div>
+
+        <Separator orientation="vertical" className="h-6 bg-zinc-800" />
+
+        {/* Image + Object actions */}
+        <div className="flex items-center gap-0.5">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <label className="flex items-center justify-center w-8 h-8 rounded-lg text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 cursor-pointer transition-colors">
+                <ImagePlus className="w-4 h-4" />
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) { onImageUpload(file); e.target.value = "" }
+                  }}
+                />
+              </label>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="bg-zinc-800 border-zinc-700 text-zinc-200 text-xs">
+              Subir imagen
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={onDuplicate}
+                disabled={!hasSelection}
+                className="flex items-center justify-center w-8 h-8 rounded-lg text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <Copy className="w-3.5 h-3.5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="bg-zinc-800 border-zinc-700 text-zinc-200 text-xs">
+              Duplicar <span className="text-zinc-500">Ctrl+D</span>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={onBringToFront}
+                disabled={!hasSelection}
+                className="flex items-center justify-center w-8 h-8 rounded-lg text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <ArrowUpToLine className="w-3.5 h-3.5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="bg-zinc-800 border-zinc-700 text-zinc-200 text-xs">
+              Traer al frente
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={onSendToBack}
+                disabled={!hasSelection}
+                className="flex items-center justify-center w-8 h-8 rounded-lg text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <ArrowDownToLine className="w-3.5 h-3.5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="bg-zinc-800 border-zinc-700 text-zinc-200 text-xs">
+              Enviar atrás
+            </TooltipContent>
+          </Tooltip>
+        </div>
+
+        <Separator orientation="vertical" className="h-6 bg-zinc-800" />
+
+        {/* Opacity presets */}
+        <div className="flex items-center gap-0.5">
+          {[100, 75, 50, 25].map((v) => (
+            <Tooltip key={v}>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => onSetOpacity(v / 100)}
+                  disabled={!hasSelection}
+                  className="text-[11px] text-zinc-600 hover:text-zinc-300 hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed w-9 h-8 rounded-lg transition-colors tabular-nums"
+                >
+                  {v}%
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="bg-zinc-800 border-zinc-700 text-zinc-200 text-xs">
+                Opacidad {v}%
+              </TooltipContent>
+            </Tooltip>
           ))}
         </div>
 

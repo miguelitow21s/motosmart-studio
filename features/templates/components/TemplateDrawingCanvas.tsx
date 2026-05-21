@@ -5,6 +5,7 @@ import type { Canvas as FabricCanvas } from "fabric"
 import {
   MousePointer2, Pencil, Minus, Square, Circle, Eraser, Type, Hand,
   Undo2, Redo2, Trash2, ZoomIn, ZoomOut, Maximize2,
+  ImagePlus, Copy, ArrowUpToLine, ArrowDownToLine,
 } from "lucide-react"
 
 interface Props {
@@ -33,6 +34,7 @@ export function TemplateDrawingCanvas({ onSvgChange, fillHeight = false }: Props
   const [strokeWidth, setStrokeWidth] = useState(3)
   const [canUndo, setCanUndo] = useState(false)
   const [canRedo, setCanRedo] = useState(false)
+  const [hasSelection, setHasSelection] = useState(false)
 
   const historyRef = useRef<string[]>([])
   const historyPosRef = useRef(-1)
@@ -113,6 +115,9 @@ export function TemplateDrawingCanvas({ onSvgChange, fillHeight = false }: Props
       canvas.on("object:added", pushHistory)
       canvas.on("object:modified", pushHistory)
       canvas.on("object:removed", pushHistory)
+      canvas.on("selection:created", () => setHasSelection(true))
+      canvas.on("selection:updated", () => setHasSelection(true))
+      canvas.on("selection:cleared", () => setHasSelection(false))
 
       fabricRef.current = canvas
 
@@ -384,6 +389,97 @@ export function TemplateDrawingCanvas({ onSvgChange, fillHeight = false }: Props
     pushHistory()
   }
 
+  async function handleDuplicate() {
+    const canvas = fabricRef.current
+    if (!canvas) return
+    const active = canvas.getActiveObjects()
+    if (!active.length) return
+    canvas.discardActiveObject()
+    const clones: ReturnType<FabricCanvas["getActiveObject"]>[] = []
+    for (const obj of active) {
+      const cloned = await (obj as unknown as { clone: () => Promise<ReturnType<FabricCanvas["getActiveObject"]>> }).clone()
+      ;(cloned as unknown as { left: number; top: number }).left += 20
+      ;(cloned as unknown as { left: number; top: number }).top += 20
+      canvas.add(cloned as Parameters<FabricCanvas["add"]>[0])
+      clones.push(cloned)
+    }
+    if (clones.length === 1) {
+      canvas.setActiveObject(clones[0] as Parameters<FabricCanvas["setActiveObject"]>[0])
+    } else {
+      const { ActiveSelection } = await getFabric()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const sel = new (ActiveSelection as any)(clones, { canvas })
+      canvas.setActiveObject(sel as Parameters<FabricCanvas["setActiveObject"]>[0])
+    }
+    canvas.renderAll()
+  }
+
+  function handleBringToFront() {
+    const canvas = fabricRef.current
+    if (!canvas) return
+    canvas.getActiveObjects().forEach((obj) => canvas.bringObjectToFront(obj))
+    canvas.renderAll()
+  }
+
+  function handleSendToBack() {
+    const canvas = fabricRef.current
+    if (!canvas) return
+    canvas.getActiveObjects().forEach((obj) => canvas.sendObjectToBack(obj))
+    canvas.renderAll()
+  }
+
+  function handleSetOpacity(opacity: number) {
+    const canvas = fabricRef.current
+    if (!canvas) return
+    canvas.getActiveObjects().forEach((obj) => obj.set({ opacity }))
+    canvas.renderAll()
+  }
+
+  async function handleImageFile(file: File) {
+    const canvas = fabricRef.current
+    if (!canvas) return
+    const { FabricImage } = await getFabric()
+    const dataUrl = await new Promise<string>((resolve) => {
+      const reader = new FileReader()
+      reader.onload = (e) => resolve(e.target!.result as string)
+      reader.readAsDataURL(file)
+    })
+    const img = await FabricImage.fromURL(dataUrl)
+    const maxW = (canvas.width ?? 800) * 0.5
+    if ((img.width ?? 0) > maxW) {
+      img.scale(maxW / (img.width ?? maxW))
+    }
+    canvas.add(img as Parameters<FabricCanvas["add"]>[0])
+    canvas.viewportCenterObject(img as Parameters<FabricCanvas["viewportCenterObject"]>[0])
+    canvas.setActiveObject(img as Parameters<FabricCanvas["setActiveObject"]>[0])
+    canvas.renderAll()
+    pushHistory()
+  }
+
+  // Keyboard shortcuts: Ctrl+Z undo, Ctrl+D duplicate, Delete
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      const target = e.target as HTMLElement
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") return
+      if ((e.ctrlKey || e.metaKey) && e.key === "z") {
+        e.preventDefault(); handleUndo()
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "d") {
+        e.preventDefault(); void handleDuplicate()
+      }
+      if (e.key === "Delete" || e.key === "Backspace") {
+        const canvas = fabricRef.current
+        if (!canvas) return
+        canvas.getActiveObjects().forEach((o) => canvas.remove(o))
+        canvas.discardActiveObject()
+        canvas.renderAll()
+      }
+    }
+    window.addEventListener("keydown", onKeyDown)
+    return () => window.removeEventListener("keydown", onKeyDown)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const TOOLS: { id: Tool; icon: React.ElementType; label: string }[] = [
     { id: "select",  icon: MousePointer2, label: "Seleccionar" },
     { id: "pencil",  icon: Pencil,        label: "Lápiz libre" },
@@ -497,6 +593,72 @@ export function TemplateDrawingCanvas({ onSvgChange, fillHeight = false }: Props
           >
             <Trash2 className="size-4" />
           </button>
+        </div>
+
+        <div className="w-px h-5 bg-zinc-700 mx-0.5" />
+
+        {/* Image + Object actions */}
+        <div className="flex items-center gap-0.5">
+          <label
+            title="Subir imagen"
+            className="p-1.5 rounded-lg text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200 transition-colors cursor-pointer"
+          >
+            <ImagePlus className="size-4" />
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) { void handleImageFile(file); e.target.value = "" }
+              }}
+            />
+          </label>
+          <button
+            type="button"
+            title="Duplicar (Ctrl+D)"
+            onClick={() => void handleDuplicate()}
+            disabled={!hasSelection}
+            className="p-1.5 rounded-lg text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200 disabled:opacity-30 transition-colors"
+          >
+            <Copy className="size-4" />
+          </button>
+          <button
+            type="button"
+            title="Traer al frente"
+            onClick={handleBringToFront}
+            disabled={!hasSelection}
+            className="p-1.5 rounded-lg text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200 disabled:opacity-30 transition-colors"
+          >
+            <ArrowUpToLine className="size-4" />
+          </button>
+          <button
+            type="button"
+            title="Enviar atrás"
+            onClick={handleSendToBack}
+            disabled={!hasSelection}
+            className="p-1.5 rounded-lg text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200 disabled:opacity-30 transition-colors"
+          >
+            <ArrowDownToLine className="size-4" />
+          </button>
+        </div>
+
+        <div className="w-px h-5 bg-zinc-700 mx-0.5" />
+
+        {/* Opacity presets */}
+        <div className="flex items-center gap-0.5">
+          {[100, 75, 50, 25].map((v) => (
+            <button
+              key={v}
+              type="button"
+              title={`Opacidad ${v}%`}
+              onClick={() => handleSetOpacity(v / 100)}
+              disabled={!hasSelection}
+              className="text-[10px] px-1.5 py-1 rounded-lg text-zinc-500 hover:bg-zinc-700 hover:text-zinc-200 disabled:opacity-30 transition-colors tabular-nums"
+            >
+              {v}%
+            </button>
+          ))}
         </div>
 
         <div className="w-px h-5 bg-zinc-700 mx-0.5" />

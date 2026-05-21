@@ -31,6 +31,13 @@ interface Props {
   existingDesign?: { id: string; fabric_json: object } | null
 }
 
+type W = Window & {
+  __designerDuplicate?: () => void
+  __designerBringToFront?: () => void
+  __designerSendToBack?: () => void
+  __designerSetOpacity?: (opacity: number) => void
+}
+
 export function DesignerEditor({ orderId, createdBy, existingDesign }: Props) {
   const canvasRef = useRef<FabricCanvas | null>(null)
   const { setSaving, setDirty } = useDesignerStore()
@@ -48,6 +55,42 @@ export function DesignerEditor({ orderId, createdBy, existingDesign }: Props) {
     if (!active.length) return
     active.forEach((obj: FabricObject) => canvas.remove(obj))
     canvas.discardActiveObject()
+    canvas.renderAll()
+  }, [])
+
+  const handleDuplicate = useCallback(() => {
+    ;(window as W).__designerDuplicate?.()
+  }, [])
+
+  const handleBringToFront = useCallback(() => {
+    ;(window as W).__designerBringToFront?.()
+  }, [])
+
+  const handleSendToBack = useCallback(() => {
+    ;(window as W).__designerSendToBack?.()
+  }, [])
+
+  const handleSetOpacity = useCallback((opacity: number) => {
+    ;(window as W).__designerSetOpacity?.(opacity)
+  }, [])
+
+  const handleImageUpload = useCallback(async (file: File) => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const { FabricImage } = await import("fabric")
+    const dataUrl = await new Promise<string>((resolve) => {
+      const reader = new FileReader()
+      reader.onload = (e) => resolve(e.target!.result as string)
+      reader.readAsDataURL(file)
+    })
+    const img = await FabricImage.fromURL(dataUrl)
+    const maxW = (canvas.width ?? 800) * 0.5
+    if ((img.width ?? 0) > maxW) {
+      img.scale(maxW / (img.width ?? maxW))
+    }
+    canvas.add(img as unknown as FabricObject)
+    canvas.viewportCenterObject(img as unknown as FabricObject)
+    canvas.setActiveObject(img as unknown as FabricObject)
     canvas.renderAll()
   }, [])
 
@@ -176,6 +219,11 @@ export function DesignerEditor({ orderId, createdBy, existingDesign }: Props) {
           onExportPng={handleExportPng}
           onDeleteSelected={handleDeleteSelected}
           onOpenTemplatePicker={() => setShowTemplatePicker(true)}
+          onDuplicate={handleDuplicate}
+          onBringToFront={handleBringToFront}
+          onSendToBack={handleSendToBack}
+          onSetOpacity={handleSetOpacity}
+          onImageUpload={handleImageUpload}
         />
         <div className="flex-1 relative">
           <DesignerCanvas
