@@ -100,8 +100,8 @@ export function OrdersTable() {
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-zinc-800/60 overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="rounded-xl border border-zinc-800/60 overflow-hidden overflow-x-auto">
+        <table className="w-full min-w-[560px] text-sm">
           <thead>
             <tr className="border-b border-zinc-800/60 bg-zinc-900/40">
               <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 w-16">Serial</th>

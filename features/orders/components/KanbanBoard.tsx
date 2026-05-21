@@ -151,7 +151,7 @@ export function KanbanBoard() {
     return (
       <div className="flex gap-4 overflow-x-auto pb-4">
         {KANBAN_STATUSES.map((s) => (
-          <div key={s.value} className="min-w-[260px]">
+          <div key={s.value} className="min-w-[220px] sm:min-w-[260px]">
             <Skeleton className="h-6 w-24 bg-zinc-800 mb-3" />
             <div className="space-y-2">
               {Array.from({ length: 3 }).map((_, i) => (

@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, Plus } from "lucide-react"
+import { Search, Plus, Menu } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useAuthStore } from "@/stores/authStore"
+import { useUIStore } from "@/stores/uiStore"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { ROUTES } from "@/lib/constants/routes"
@@ -20,6 +21,7 @@ import { NotificationBell } from "./NotificationBell"
 
 export function Topbar() {
   const { user } = useAuthStore()
+  const { setMobileSidebarOpen } = useUIStore()
   const router = useRouter()
   const supabase = createClient()
 
@@ -36,24 +38,38 @@ export function Topbar() {
     .toUpperCase() ?? "?"
 
   return (
-    <header className="h-16 flex items-center gap-4 px-6 border-b border-zinc-800/60 bg-[#0a0a0b]/80 backdrop-blur-sm shrink-0">
+    <header className="h-16 flex items-center gap-2 sm:gap-4 px-3 sm:px-6 border-b border-zinc-800/60 bg-[#0a0a0b]/80 backdrop-blur-sm shrink-0">
+      {/* Hamburger — mobile only */}
+      <button
+        onClick={() => setMobileSidebarOpen(true)}
+        className="flex items-center justify-center w-9 h-9 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 transition-colors md:hidden shrink-0"
+        aria-label="Abrir menú"
+      >
+        <Menu className="w-5 h-5" />
+      </button>
+
       {/* Search */}
-      <div className="flex-1 max-w-md">
-        <div className="flex items-center gap-2 px-3 h-9 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-500 text-sm cursor-pointer hover:border-zinc-700 transition-colors">
+      <div className="hidden sm:flex flex-1 max-w-md">
+        <div className="flex items-center gap-2 px-3 h-9 w-full rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-500 text-sm cursor-pointer hover:border-zinc-700 transition-colors">
           <Search className="w-3.5 h-3.5 shrink-0" />
-          <span className="text-zinc-500">Buscar pedidos, clientes...</span>
-          <kbd className="ml-auto text-xs bg-zinc-800 text-zinc-500 px-1.5 py-0.5 rounded border border-zinc-700">
+          <span className="text-zinc-500 truncate">Buscar pedidos, clientes...</span>
+          <kbd className="ml-auto text-xs bg-zinc-800 text-zinc-500 px-1.5 py-0.5 rounded border border-zinc-700 shrink-0">
             ⌘K
           </kbd>
         </div>
       </div>
 
+      {/* Search icon — mobile only */}
+      <button className="flex sm:hidden items-center justify-center w-9 h-9 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 transition-colors shrink-0">
+        <Search className="w-4 h-4" />
+      </button>
+
       <div className="flex items-center gap-2 ml-auto">
         {/* New order CTA */}
-        <Button size="sm" className="bg-indigo-500 hover:bg-indigo-600 text-white gap-1.5" asChild>
+        <Button size="sm" className="bg-indigo-500 hover:bg-indigo-600 text-white gap-1.5 h-9 px-3" asChild>
           <Link href={ROUTES.orders.new}>
-            <Plus className="w-3.5 h-3.5" />
-            Nuevo pedido
+            <Plus className="w-4 h-4 shrink-0" />
+            <span className="hidden sm:inline">Nuevo pedido</span>
           </Link>
         </Button>
 
@@ -71,12 +87,8 @@ export function Topbar() {
               </Avatar>
               {user && (
                 <div className="hidden md:flex flex-col items-start">
-                  <span className="text-xs font-medium text-zinc-200 leading-none">
-                    {user.full_name}
-                  </span>
-                  <span className="text-[10px] text-zinc-500 leading-none mt-0.5 capitalize">
-                    {user.role}
-                  </span>
+                  <span className="text-xs font-medium text-zinc-200 leading-none">{user.full_name}</span>
+                  <span className="text-[10px] text-zinc-500 leading-none mt-0.5 capitalize">{user.role}</span>
                 </div>
               )}
             </button>

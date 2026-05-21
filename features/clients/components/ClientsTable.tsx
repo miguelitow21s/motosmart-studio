@@ -62,7 +62,7 @@ export function ClientsTable() {
     <>
       {/* Toolbar */}
       <div className="flex items-center gap-3 mb-5 flex-wrap">
-        <div className="relative flex-1 min-w-48 max-w-sm">
+        <div className="relative flex-1 min-w-32 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500" />
           <Input
             placeholder="Buscar por nombre o teléfono..."
@@ -84,7 +84,7 @@ export function ClientsTable() {
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-zinc-800/60 overflow-hidden">
+      <div className="rounded-xl border border-zinc-800/60 overflow-hidden overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-zinc-800/60 bg-zinc-900/40">
@@ -162,7 +162,7 @@ export function ClientsTable() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center justify-end gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                         <Link
                           href={ROUTES.clients.detail(client.id)}
                           className="flex items-center justify-center w-7 h-7 rounded-md text-zinc-600 hover:text-indigo-400 hover:bg-indigo-400/10 transition-colors"
