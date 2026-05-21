@@ -24,15 +24,20 @@ export function NotificationBell() {
   async function fetchNotifications() {
     if (!user) return
     setLoading(true)
-    const supabase = createClient()
-    const { data } = await supabase
-      .from("notifications")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(20)
-    setNotifications(data ?? [])
-    setLoading(false)
+    try {
+      const supabase = createClient()
+      const { data } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(20)
+      setNotifications(data ?? [])
+    } catch {
+      // silencioso — no interrumpir UX si las notificaciones fallan
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {

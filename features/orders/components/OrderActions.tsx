@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { QRCodeSVG } from "qrcode.react"
 import { Download, QrCode, Printer, X, Copy, Check } from "lucide-react"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -228,7 +229,7 @@ export function OrderActions({ order }: Props) {
                   className="flex-1 border-zinc-700 text-zinc-300 hover:bg-zinc-800 gap-1.5"
                   onClick={() => {
                     const svg = document.querySelector("[data-qr-export] svg") as SVGElement | null
-                    if (!svg) return
+                    if (!svg) { toast.error("QR no disponible, intenta abriendo el diálogo de nuevo"); return }
                     const blob = new Blob([svg.outerHTML], { type: "image/svg+xml" })
                     const url = URL.createObjectURL(blob)
                     const a = document.createElement("a")

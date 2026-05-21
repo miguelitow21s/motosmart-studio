@@ -32,7 +32,7 @@ interface Props {
 const STATUS_ORDER = ORDER_STATUSES.map((s) => s.value)
 
 export function PublicOrderView({ order, history }: Props) {
-  const currentIndex = STATUS_ORDER.indexOf(order.status as OrderStatus)
+  const currentIndex = Math.max(0, STATUS_ORDER.indexOf(order.status as OrderStatus))
   const workLabel = WORK_TYPES.find((t) => t.value === order.work_type)?.label ?? order.work_type
   const statusConfig = ORDER_STATUSES.find((s) => s.value === order.status)
 
@@ -139,9 +139,9 @@ export function PublicOrderView({ order, history }: Props) {
                 const done = i < currentIndex
                 const active = i === currentIndex
                 return (
-                  <div key={s.value} className="flex flex-col items-center gap-1.5 w-12">
+                  <div key={s.value} className="flex flex-col items-center gap-1 w-10 sm:w-12">
                     <div className={cn(
-                      "w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors z-10",
+                      "w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 flex items-center justify-center transition-colors z-10",
                       done
                         ? "bg-indigo-500 border-indigo-500"
                         : active

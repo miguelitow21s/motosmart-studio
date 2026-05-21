@@ -151,14 +151,6 @@ export function OrderDetail({ order, history }: Props) {
               value={formatDate(order.created_at)}
               sub={formatRelativeTime(order.created_at)}
             />
-            {order.notes && (
-              <InfoRow
-                icon={FileText}
-                label="Notas"
-                value={order.notes}
-                className="sm:col-span-2"
-              />
-            )}
           </div>
         </motion.div>
 
